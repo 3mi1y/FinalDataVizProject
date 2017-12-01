@@ -9,9 +9,13 @@ I have all of this code working now, at least look through the tutorial but you 
 Open your terminal.
 Navigate to where you want to save the file final_dv_project and run these commands:
 `git clone https://github.com/3mi1y/FinalDataVizProject.git final_dv_project`
+
 `cd final_dv_project`
+
 `npm install`
+
 `node index.js`
+
 After you have run these commands open your browser and visit localhost:3000
 
 
