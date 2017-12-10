@@ -1,5 +1,5 @@
 # Final Data Visualization for this class
-![alt text](https://github.com/3mi1y/FinalDataVizProject/blob/master/Screen%20Shot%202017-11-30%20at%205.24.08%20PM.png?raw=true)
+![alt text](https://github.com/3mi1y/FinalDataVizProject/blob/emily/Screen%20Shot%202017-12-10%20at%202.31.58%20PM.png?raw=true)
 
 This is just a starting point for our code. I walked through the tutorial here to get this bubble map set up:
 [Bubble Map Tutorial](https://bost.ocks.org/mike/bubble-map/#initializing)
