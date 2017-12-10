@@ -12,76 +12,115 @@
       stroke-linecap: round;
     }
 
-    .bubble {
-      fill: brown;
-      fill-opacity: .5;
-      stroke: #fff;
-      stroke-width: .5px;
-    }
-
-    .bubble :hover {
-      stroke: #000;
-    }
-
-    .legend circle {
-      fill: none;
-      stroke: #ccc;
-    }
-
-    .legend text {
-      fill: #777;
-      font: 10px sans-serif;
-      text-anchor: middle;
+    circle {
+      fill: #013243;
+      fill-opacity: .6;
+      stroke: white;
     }
   </style>
 
   <body>
     <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="//d3js.org/topojson.v1.min.js"></script>
+    <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
     <script>
 
-    var width = 960,
-        height = 600;
+    // Viz parameters
+    const width = 960
+    const height = 600
 
-    var path = d3.geo.path()
+    // *********************************************
+    // These projections are for the data in the csv file that will eventually be uploadable
+    // *********************************************
+    const projectionCSV = d3.geo.albersUsa()
+      .scale(1280)
+      .translate([width / 2, height / 2])
+      .precision(.5);
+
+    const pathCSV = d3.geo.path()
+        .projection(projectionCSV)
+
+    // *********************************************
+    // These projections are for drawing the actual map and state lines
+    // *********************************************
+    const path = d3.geo.path()
         .projection(null);
 
-    var svg = d3.select("body").append("svg")
+    const svg = d3.select("body").append("svg")
         .attr("width", width)
         .attr("height", height);
 
-    var radius = d3.scale.sqrt()
+    const radius = d3.scale.sqrt()
         .domain([0, 1e6])
         .range([0, 15]);
 
+    // Define the div for the tooltip
+    const div = d3.select("body").append("div")	
+        .attr("class", "tooltip")				
+        .style("opacity", 0);
+    
+    // This is the code that project the united states with state lines
     d3.json("/us.json", function(error, us) {
       if (error) return console.error(error);
 
       svg.append("path")
-        .datum(topojson.feature(us, us.objects.nation))
+        .datum(topojson.feature(us, us.objects.states))
         .attr("class", "land")
         .attr("d", path);
 
-
-      svg.append("path")
+        svg.append("path")
           .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
           .attr("class", "border border--state")
           .attr("d", path);
-
-      svg.append("g")
-          .attr("class", "bubble")
-        .selectAll("circle")
-          .data(topojson.feature(us, us.objects.counties).features
-            .sort(function(a, b) { return b.properties.population - a.properties.population; }))
-        .enter().append("circle")
-          .attr("transform", function(d) { return "translate(" + path.centroid(d) + ")"; })
-          .attr("r", function(d) { return radius(d.properties.population); })
-        .append("title")
-          .text(function(d) {
-            return d.properties.name
-                + "\nPopulation " + formatNumber(d.properties.population);
-          });
     });
+
+    // this is the code that projects the lat/longs for individual companies
+    // when you allow upload functionality this function will be working on the file that was uploaded
+    const drawCompanies = () => {
+      d3.csv('/sampleData.csv', (err, companies) => {
+          if(err) {
+            return console.log(err)
+          } else {      
+            svg.append('path')
+              .attr('class', 'companies')
+              .attr('d', pathCSV);
+
+            svg.selectAll('circle')
+              .attr('class', 'companies')
+              .data(companies)
+              .enter()
+              .append('circle')
+              .attr('transform', (d) => {
+                console.log(`translate(${projectionCSV([d.lng, d.lat])})`)
+                return `translate(${projectionCSV([d.lng, d.lat])})`
+              })
+              .attr('r', (d) => {
+                // right now the radius of the bubble is represented by the number of tags associated with the company
+                return d.tags.length/2
+              })
+              .on("mouseover", function(d) {
+                  div.transition()		
+                      .duration(200)		
+                      .style("opacity", .9);		
+                  div	.html(`<p>Customer Name: ${d.customer_name}</p>
+                            <p>Contact Name: ${d.contact_name}</p>`)	
+                      .attr("left", (d3.event.pageX) + "px")		
+                      .attr("top", (d3.event.pageY - 28) + "px");	
+                  })					
+              .on("mouseout", function(d) {		
+                  div.transition()		
+                      .duration(500)		
+                      .style("opacity", 0);	
+              });
+          }
+      })
+    }
+
+    // we have to set a timeout on when we draw the circles because otherwise the cirlces will be drawn before the map
+    // and then the map will cover the circles. So, we need to make sure that the circles aren't drawn until after the map.
+    const timeout = setTimeout(() => {
+      drawCompanies()
+    }, 1000)
 
     </script>
   </body>

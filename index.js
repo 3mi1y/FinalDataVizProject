@@ -7,12 +7,12 @@ app.get('/', (req, res) => {
   //__dirname : It will resolve to your project folder.
 });
 
-app.get('/build/counties.json', (req,res) => {
-  res.sendFile(path.join(__dirname+'/build/counties.json'))
-})
-
 app.get('/us.json', (req,res) => {
   res.sendFile(path.join(__dirname+'/us.json'))
+})
+
+app.get('/sampleData.csv', (req, res) => {
+  res.sendFile(path.join(__dirname+'/SampleData.csv'))
 })
 
 app.listen(3000);
