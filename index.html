@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<input type="file" name="file" id="file">
 <meta charset="utf-8">
   <style>
     .land {
@@ -164,6 +165,13 @@
     // this is the code that projects the lat/longs for individual companies
     // when you allow upload functionality this function will be working on the file that was uploaded
     const drawCompanies = () => {
+
+      //Select file on page
+      document.getElementById('file').onchange = function(){
+
+        var file = this.files[0];
+        var data_file = file['name'];
+
       d3.csv('/sampleData.csv', (err, companies) => {
           if(err) {
             return console.log(err)
@@ -205,6 +213,7 @@
       })
 
     }
+  }
 
     const drawTags = () => {
       d3.csv('/sampleData.csv', (err, lines) => {
@@ -215,6 +224,7 @@
         }
       })
     }
+
     // we have to set a timeout on when we draw the circles because otherwise the cirlces will be drawn before the map
     // and then the map will cover the circles. So, we need to make sure that the circles aren't drawn until after the map.
     const timeout = setTimeout(() => {
