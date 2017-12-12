@@ -20,11 +20,90 @@
   </style>
 
   <body>
+    <!--  -->
+    <div id="tagZone" class="tags"></div>
+    <ul id="selectedTags" class="sList"></ul>
+    <script type="text/javascript" src="tagButtons.js"></script>
+    <!--  -->
+
     <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="//d3js.org/topojson.v1.min.js"></script>
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
     <script>
+
+    CreateTagList('/sampleData.csv');
+    var testTags = ["seed", "tag", "labels"];
+    var total = 10;
+
+    function CreateTagList(fileToRead){
+        d3.csv('/sampleData.csv', function(data){
+          total = +d.lng;
+          testTags.append(d['tags']);
+        });
+      }
+
+      var tagDiv = document.getElementById("tagZone");
+      var selectedList = document.getElementById("selectedTags");
+      var selected = [];
+
+      var blank = d3.select("body")
+                    .append("svg")
+                    .attr("width", 100)
+                    .attr("height", 100);
+
+      var fillblank = d3.select("blank").append("testTags");
+    </script>
+
+    <script>
+
+    ConstructButtons(testTags);
+
+    function ConstructButtons(tagList) {
+    	for (var i = 0; i < tagList.length; i++) {
+    		var btn = document.createElement("button");
+    		btn.id = "button" + i;
+    		btn.setAttribute("class", "up");
+    		btn.innerHTML = tagList[i];
+    		btn.onclick = function() {SetState(this);};
+    		tagDiv.appendChild(btn);
+    	}
+    }
+
+    function SetState(b) {
+    	if(!selected.includes(b))  {
+    		selected.push(b);
+    		b.className = "down";
+    		AddToList(b.innerHTML);
+    	} else {
+    		const index = selected.indexOf(b);
+    		selected.splice(index, 1);
+    		b.className = "up";
+    		RemoveFromList(b.innerHTML);
+    	}
+    	var radnum = b.value.replace(/[^1-9]/gi,"");
+    }
+
+    function AddToList(tagName) {
+    	var listItem = document.createElement("li");
+    	listItem.innerHTML = tagName;
+    	listItem.id = "_" + tagName;
+    	listItem.style.color = GetRandomColor();
+    	selectedList.appendChild(listItem);
+    }
+
+    function RemoveFromList(tagName) {
+    	var listItem = document.getElementById("_" + tagName);
+    	listItem.parentNode.removeChild(listItem);
+    }
+
+    function GetRandomColor() {
+    	var r = (Math.floor(Math.random() * 256));
+    	var g = (Math.floor(Math.random() * 256));
+    	var b = (Math.floor(Math.random() * 256));
+    	return 'rgb(' + r + ',' + g + ',' + b + ')';
+    }
+
 
     // Viz parameters
     const width = 960
