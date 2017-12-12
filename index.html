@@ -29,6 +29,7 @@
     // Viz parameters
     const width = 960
     const height = 600
+    var arrayTags = ["test"];
 
     // *********************************************
     // These projections are for the data in the csv file that will eventually be uploadable
@@ -98,12 +99,14 @@
               .enter()
               .append('circle')
               .attr('transform', (d) => {
-                console.log(`translate(${projectionCSV([d.lng, d.lat])})`)
+                //console.log(`translate(${projectionCSV([d.lng, d.lat])})`)
                 return `translate(${projectionCSV([d.lng, d.lat])})`
               })
               .attr('r', (d) => {
                 // right now the radius of the bubble is represented by the number of tags associated with the company
+
                 return d.tags.length/2
+
               })
               .on("mouseover", function(d) {
                   div.transition()
@@ -124,11 +127,22 @@
 
     }
 
+    const drawTags = () => {
+      d3.csv('/sampleData.csv', (err, lines) => {
+        if(err){
+          return console.log(err)
+        } else {
+          console.log(lines);
+        }
+      })
+    }
     // we have to set a timeout on when we draw the circles because otherwise the cirlces will be drawn before the map
     // and then the map will cover the circles. So, we need to make sure that the circles aren't drawn until after the map.
     const timeout = setTimeout(() => {
       drawCompanies()
+
     }, 1000)
+    drawTags();
 
     </script>
   </body>
