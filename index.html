@@ -22,6 +22,7 @@
   <body>
     <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="//d3js.org/topojson.v1.min.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
     <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
     <script>
 
@@ -46,19 +47,25 @@
     const path = d3.geo.path()
         .projection(null);
 
-    const svg = d3.select("body").append("svg")
+    const svg = d3.select("body")
+        .append("svg")
         .attr("width", width)
-        .attr("height", height);
+        .attr("height", height)
+        .call(d3.behavior.zoom().on("zoom", function () {
+          svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+        }))
+        .append("g");
+
 
     const radius = d3.scale.sqrt()
         .domain([0, 1e6])
         .range([0, 15]);
 
     // Define the div for the tooltip
-    const div = d3.select("body").append("div")	
-        .attr("class", "tooltip")				
+    const div = d3.select("body").append("div")
+        .attr("class", "tooltip")
         .style("opacity", 0);
-    
+
     // This is the code that project the united states with state lines
     d3.json("/us.json", function(error, us) {
       if (error) return console.error(error);
@@ -80,7 +87,7 @@
       d3.csv('/sampleData.csv', (err, companies) => {
           if(err) {
             return console.log(err)
-          } else {      
+          } else {
             svg.append('path')
               .attr('class', 'companies')
               .attr('d', pathCSV);
@@ -99,21 +106,22 @@
                 return d.tags.length/2
               })
               .on("mouseover", function(d) {
-                  div.transition()		
-                      .duration(200)		
-                      .style("opacity", .9);		
+                  div.transition()
+                      .duration(200)
+                      .style("opacity", .9);
                   div	.html(`<p>Customer Name: ${d.customer_name}</p>
-                            <p>Contact Name: ${d.contact_name}</p>`)	
-                      .attr("left", (d3.event.pageX) + "px")		
-                      .attr("top", (d3.event.pageY - 28) + "px");	
-                  })					
-              .on("mouseout", function(d) {		
-                  div.transition()		
-                      .duration(500)		
-                      .style("opacity", 0);	
+                            <p>Contact Name: ${d.contact_name}</p>`)
+                      .attr("left", (d3.event.pageX) + "px")
+                      .attr("top", (d3.event.pageY - 28) + "px");
+                  })
+              .on("mouseout", function(d) {
+                  div.transition()
+                      .duration(500)
+                      .style("opacity", 0);
               });
           }
       })
+
     }
 
     // we have to set a timeout on when we draw the circles because otherwise the cirlces will be drawn before the map
