@@ -11,6 +11,11 @@ app.get('/us.json', (req,res) => {
   res.sendFile(path.join(__dirname+'/us.json'))
 })
 
+// This is the route that sends the tagButtons.js file so that index.html can access it
+app.get('/tagButtons.js', (req,res) => {
+  res.sendFile(path.join(__dirname+'/tagButtons.js'))
+})
+
 app.get('/sampleData.csv', (req, res) => {
   res.sendFile(path.join(__dirname+'/SampleData.csv'))
 })

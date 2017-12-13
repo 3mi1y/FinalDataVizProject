@@ -1,9 +1,9 @@
-var testTags = ["you", "have", "entered", "the", "tag", "zone", "things", "not", "even", "a", "real", "shark"];
-var tagDiv = document.getElementById("tagZone");
-var selectedList = document.getElementById("selectedTags");
-var selected = [];
+// var testTags = ["you", "have", "entered", "the", "tag", "zone", "things", "not", "even", "a", "real", "shark"];
+// var tagDiv = document.getElementById("tagZone");
+// var selectedList = document.getElementById("selectedTags");
+// var selected = [];
 
-ConstructButtons(testTags);
+// ConstructButtons(testTags);
 
 function SetState(b) {
 	if(!selected.includes(b))  {
