@@ -39,9 +39,31 @@
       var total = 10;
 
       const CreateTagList = (data) => {
-        testTags = data.map(company => {
-          return company.tags
+        // the nested array var takes all the tags from the data and splits by the
+        // delimiter and returns a nested array
+        const nestedArray = data.map(company => {
+          return company.tags.split(':')
         })
+
+        // iterate over nested array to flatten
+        const flattenedArray = []
+        for(let i = 0; i < nestedArray.length; i += 1) {
+          for(let j = 0; j < nestedArray[i].length; j += 1) {
+            flattenedArray.push(nestedArray[i][j])
+          }
+        }
+
+        // only get the unique values using the filter function (method defined below)
+        // could also do this in a traditional way with for-loop and push only values
+        // that haven't been seen before to the array
+        testTags = flattenedArray.filter(onlyUnique)
+        
+        console.log(testTags)
+        return testTags
+      }
+
+      const onlyUnique = (value, index, self) => {
+        return self.indexOf(value) === index;
       }
 
       var tagDiv = document.getElementById("tagZone");
