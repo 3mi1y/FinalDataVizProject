@@ -211,31 +211,12 @@
       }
     }
     function updateView() {
-      redrawMap();
-      const timeout2 = setTimeout(() => {
         redrawCities();
-      }, 100)
-      function redrawMap(){
-        svg.selectAll("*").remove();
-        // This is the code that project the united states with state lines
-        d3.json("/us.json", function(error, us) {
-          if (error) return console.error(error);
-
-          svg.append("path")
-            .datum(topojson.feature(us, us.objects.states))
-            .attr("class", "land")
-            .attr("d", path);
-
-            svg.append("path")
-              .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
-              .attr("class", "border border--state")
-              .attr("d", path);
-        });
-      }
+    }
 
       function redrawCities(){
 
-
+                svg.selectAll("circle").remove();
                 // Get the data again
                 d3.csv('/sampleData.csv', (err, companies) => {
                   if(err) {
@@ -288,7 +269,7 @@
 
       }
 
-    }
+
       // we have to set a timeout on when we draw the circles because otherwise the cirlces will be drawn before the map
       // and then the map will cover the circles. So, we need to make sure that the circles aren't drawn until after the map.
       const timeout1 = setTimeout(() => {
