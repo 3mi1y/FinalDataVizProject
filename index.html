@@ -187,7 +187,7 @@
 
                   }
 
-                  return 10;
+                  return 0;
                   //return d.tags.length/2
 
                 })
@@ -211,61 +211,90 @@
       }
     }
     function updateView() {
+      redrawMap();
+      const timeout2 = setTimeout(() => {
+        redrawCities();
+      }, 100)
+      function redrawMap(){
+        svg.selectAll("*").remove();
+        // This is the code that project the united states with state lines
+        d3.json("/us.json", function(error, us) {
+          if (error) return console.error(error);
 
-        // Get the data again
-        d3.csv('/sampleData.csv', (err, companies) => {
-          if(err) {
-            return console.log(err)
-          } else {
+          svg.append("path")
+            .datum(topojson.feature(us, us.objects.states))
+            .attr("class", "land")
+            .attr("d", path);
 
-            svg.selectAll('.circle').remove().enter();
-            svg.selectAll('.circle')
-              .attr('class', 'companies')
-              .data(companies)
-              .enter()
-              .append('circle')
-              .attr('transform', (d) => {
+            svg.append("path")
+              .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
+              .attr("class", "border border--state")
+              .attr("d", path);
+        });
+      }
 
-                //console.log(`translate(${projectionCSV([d.lng, d.lat])})`)
-                return `translate(${projectionCSV([d.lng, d.lat])})`
-              })
+      function redrawCities(){
 
-              .attr('r', (d) => {
-                // right now the radius of the bubble is represented by the number of tags associated with the company
 
-                var  tags1 = d.tags.split(":");
-                for(var tagSelected in tagArray){
-                  for(var tagPresent in tags1){
-                    if (tagArray[tagSelected] == tags1[tagPresent]) {
-                      return 10;
-                    }
+                // Get the data again
+                d3.csv('/sampleData.csv', (err, companies) => {
+                  if(err) {
+                    return console.log(err)
+                  } else {
+
+                    circles = svg.selectAll(".circle");
+                    circles.remove();
+                    svg.selectAll('.circle')
+                      .attr('class', 'companies')
+                      .data(companies)
+                      .enter()
+                      .append('circle')
+                      .attr('transform', (d) => {
+
+                        //console.log(`translate(${projectionCSV([d.lng, d.lat])})`)
+                        return `translate(${projectionCSV([d.lng, d.lat])})`
+                      })
+
+                      .attr('r', (d) => {
+                        // right now the radius of the bubble is represented by the number of tags associated with the company
+
+                        var  tags1 = d.tags.split(":");
+                        for(var tagSelected in tagArray){
+                          for(var tagPresent in tags1){
+                            if (tagArray[tagSelected] == tags1[tagPresent]) {
+                              return 10;
+                            }
+                          }
+                        }
+                        return 0;
+
+                      })
+                      .on("mouseover", function(d) {
+                          div.transition()
+                              .duration(200)
+                              .style("opacity", .9);
+                          div	.html(`<p>Customer Name: ${d.customer_name}</p>
+                                    <p>Contact Name: ${d.contact_name}</p>`)
+                              .attr("left", (d3.event.pageX) + "px")
+                              .attr("top", (d3.event.pageY - 28) + "px");
+                          })
+                      .on("mouseout", function(d) {
+                          div.transition()
+                              .duration(500)
+                              .style("opacity", 0);
+                      });
                   }
-                }
-                return 0;
-
               })
-              .on("mouseover", function(d) {
-                  div.transition()
-                      .duration(200)
-                      .style("opacity", .9);
-                  div	.html(`<p>Customer Name: ${d.customer_name}</p>
-                            <p>Contact Name: ${d.contact_name}</p>`)
-                      .attr("left", (d3.event.pageX) + "px")
-                      .attr("top", (d3.event.pageY - 28) + "px");
-                  })
-              .on("mouseout", function(d) {
-                  div.transition()
-                      .duration(500)
-                      .style("opacity", 0);
-              });
-          }
-      })
+
+      }
+
     }
       // we have to set a timeout on when we draw the circles because otherwise the cirlces will be drawn before the map
       // and then the map will cover the circles. So, we need to make sure that the circles aren't drawn until after the map.
-      const timeout = setTimeout(() => {
+      const timeout1 = setTimeout(() => {
         drawCompanies()
       }, 1000)
+
 
     </script>
   </body>

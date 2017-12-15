@@ -7,10 +7,14 @@
 
 function SetState(b) {
 	if(!selected.includes(b))  {
+
+		updateView();
 		selected.push(b);
 		b.className = "down";
 		AddToList(b.innerHTML);
 	} else {
+
+		updateView();
 		const index = selected.indexOf(b);
 		selected.splice(index, 1);
 		b.className = "up";
@@ -60,7 +64,6 @@ function ConstructButtons(tagList) {
 
 		btn.onclick = function() {
 
-			updateView();
 			SetState(this);
 		};
 
