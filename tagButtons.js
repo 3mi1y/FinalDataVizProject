@@ -69,7 +69,7 @@ function ConstructButtons(tagList) {
 function ClearSelected(){
 	tagArray = [];
 	updateView();
-	// SetState(this);
+
 }
 function getTagArray() {
 	return tagArray;
