@@ -1,9 +1,5 @@
-// var testTags = ["you", "have", "entered", "the", "tag", "zone", "things", "not", "even", "a", "real", "shark"];
-// var tagDiv = document.getElementById("tagZone");
-// var selectedList = document.getElementById("selectedTags");
-// var selected = [];
-	var tagArray = [];
-// ConstructButtons(testTags);
+
+var tagArray = [];
 
 function SetState(b) {
 	if(!selected.includes(b))  {
@@ -68,6 +64,12 @@ function ConstructButtons(tagList) {
 
 		tagDiv.appendChild(btn);
 	}
+}
+
+function ClearSelected(){
+	tagArray = [];
+	updateView();
+	// SetState(this);
 }
 function getTagArray() {
 	return tagArray;
