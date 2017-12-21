@@ -36,7 +36,8 @@
       // uploads a file
       let testTags = [];
       var total = 10;
-      var dataSet = [];
+      var datSet = [];
+      var zoomSet = [];
       const CreateTagList = (data) => {
         // the nested array var takes all the tags from the data and splits by the
         // delimiter and returns a nested array
@@ -160,10 +161,11 @@
             if(err) {
               return console.log(err)
             } else {
-              // Draw the buttons here so that the points on the map and the buttons are created all at once
-              dataSet = companies;
 
-              console.log(dataSet);
+              //capture datSet for redraw
+              datSet = companies.slice();
+
+              // Draw the buttons here so that the points on the map and the buttons are created all at once
               CreateTagList(companies)
               ConstructButtons(testTags)
 
@@ -176,24 +178,17 @@
                 .data(companies)
                 .enter()
                 .append('circle')
+                .attr("id","path")
                 .attr('transform', (d) => {
-                  //console.log(`translate(${projectionCSV([d.lng, d.lat])})`)
+
                   return `translate(${projectionCSV([d.lng, d.lat])})`
+
                 })
                 .attr('r', (d) => {
-
-                  tags = d.tags.split(":");
-                  var  temp = getTagArray();
-                  for(var tagPresent in tags){
-                    for(var tagSelected in tagArray){
-                      console.log("Test" + tagSelected + " : " + tagPresent)
-                      if (tagPresent = tagSelected) {
-                        return 10;
-                      }
-                    }
-                  }
                   return 0;
                 })
+
+                //tooltip functionality
                 .on("mouseover", function(d) {
                     div.transition()
                         .duration(200)
@@ -210,38 +205,42 @@
                 });
             }
         })
-
       }
     }
     function updateView() {
-
-        g.selectAll('circle').remove();
         redrawCities();
     }
 
     function redrawCities(){
 
 
+                cluster();
+
+
+                g.selectAll('circle').remove();
 
                 g.selectAll('circle')
                 .attr('class', 'companies')
-                .data(dataSet)
+                .data(zoomSet)
+
                 .enter()
                 .append('circle')
                 .attr('transform', (d) => {
                   return `translate(${projectionCSV([d.lng, d.lat])})`
                 })
+
                 .attr('r', (d) => {
                     var  tags1 = d.tags.split(":");
                     for(var tagSelected in tagArray){
                       for(var tagPresent in tags1){
                         if (tagArray[tagSelected] == tags1[tagPresent]) {
-                          return 10/zoom.scale();
+
+                          return 50/zoom.scale();
+
                         }
                       }
                     }
                     return 0;
-
                   })
                   .on("mouseover", function(d) {
                       div.transition()
@@ -257,14 +256,38 @@
                           .duration(500)
                           .style("opacity", 0);
                   });
+
+
+
+
       }
 
     function zoomed() {
+
+        redrawCities();
+
         g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
         g.selectAll("circle")
         .attr("d", path/zoom.scale())
-        .attr("r", 10/zoom.scale())
+        .attr("r", 50/zoom.scale())
         .style("stroke-width", 1/zoom.scale());
+
+    }
+    function cluster() {
+
+      zoomSet = datSet.slice(0);
+      test = [];
+      for(i = 0; i < zoomSet.length; i++){
+        for(j = i+1; j < zoomSet.length; j++){
+          if(Math.abs(zoomSet[i].lat - zoomSet[j].lat) < 5/zoom.scale() && Math.abs(zoomSet[i].lng - zoomSet[j].lng) < 5/zoom.scale() ){
+
+            zoomSet[i] = {contact_name: zoomSet[i].contact_name + zoomSet[j].contact_name, customer_name:zoomSet[i].customer_name + zoomSet[j].customer_name, lat:String((parseFloat(zoomSet[i].lat) + parseFloat(zoomSet[j].lat))/2), lng:String((parseFloat(zoomSet[i].lng) + parseFloat(zoomSet[j].lng))/2), tags:zoomSet[i].tags + zoomSet[j].tags}
+            zoomSet.splice(j,1);
+
+
+          }
+        }
+      }
 
     }
 
