@@ -57,9 +57,9 @@ function ConstructButtons(tagList) {
 		btn.innerHTML = tagList[i];
 
 		btn.onclick = function() {
-
 			updateView();
 			SetState(this);
+
 		};
 
 		tagDiv.appendChild(btn);
@@ -68,6 +68,7 @@ function ConstructButtons(tagList) {
 
 function ClearSelected(){
 	tagArray = [];
+
 	updateView();
 
 }

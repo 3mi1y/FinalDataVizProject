@@ -15,16 +15,16 @@
 
     circle {
       fill: #013243;
-      fill-opacity: .9;
+      fill-opacity: .6;
       stroke: white;
     }
   </style>
 
   <body>
     <div id="tagZone" class="tags"></div>
-    <ul id="selectedTags" class="sList"></ul>
+    <!-- <ul id="selectedTags" class="sList"></ul> -->
     <script type="text/javascript" src="tagButtons.js"></script>
-    <!-- <input type="button" value="Clear Selected" src="tagButtons.js" onclick="ClearSelected()"/> -->
+    <input type="button" value="Clear Selected" src="tagButtons.js" onclick="ClearSelected()"/>
 
 
     <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
@@ -146,8 +146,8 @@
         document.getElementById('file').onchange = function(){
           var file = this.files[0];
           var data_file = file['name'];
-
-        d3.csv('/sampleData.csv', (err, companies) => {
+          console.log(data_file);
+        d3.csv(data_file, (err, companies) => {
             if(err) {
               return console.log(err)
             } else {
