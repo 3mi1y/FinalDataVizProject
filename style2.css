@@ -1,6 +1,7 @@
 body {
     width: 85%;
     background-color: #E0E0E0;
+
 }
 #tag {
     padding-top: 0.625em;
@@ -11,7 +12,8 @@ body {
 }
 #tag #tag0 {
     color: #574ece;
-    font-size: 1.25em;
+    font: 1.25em arial, sans-serif;
+    /* size: {start: 12, end: 36, unit: 'px'}; */
 }
 #tag a {
     display: inline-block;
