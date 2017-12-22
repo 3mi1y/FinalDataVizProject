@@ -16,8 +16,8 @@ app.get('/tagButtons.js', (req,res) => {
   res.sendFile(path.join(__dirname+'/tagButtons.js'))
 })
 
-app.get('/sampleData.csv', (req, res) => {
-  res.sendFile(path.join(__dirname+'/SampleData.csv'))
+app.get('/Cities.csv', (req, res) => {
+  res.sendFile(path.join(__dirname+'/Cities.csv'))
 })
 
 app.listen(3000);
