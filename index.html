@@ -23,28 +23,11 @@
     <link rel="stylesheet" href="style2.css">
   </head>
   <body>
-    <div class = "tag">
-      <a class="tag0">sharepoint</a>
-      <a class="tag0">web services</a>
-      <a class="tag0">apache rave</a>
-      <a class="tag0">html</a>
-      <a class="tag0">spring framework</a>
-      <a class="tag0">scrum</a>
-      <a class="tag0">c#</a>
-      <a class="tag0">certified scrum master</a>
-      <a class="tag0">rest</a>
-      <a class="tag0">enterprise search</a>
-      <a class="tag0">web applications</a>
-      <a class="tag0">css</a>
-      <a class="tag0">java</a>
-      <a class="tag0">jquery</a>
-      <a class="tag0">agile</a>
-      <a class="tag0">agile development</a>
-      <a class="tag0">xml</a>
-      <a class="tag0">javascript</a>
-      <a class="tag0">testing</a>
-      <a class="tag0">project management</a>
+    <div class='tagContainer'>
+    <div id = "tag">
+      <!-- tags will be inserted here -->
     </div>
+</div>
     <div id="tagZone" class="tag"></div>
     <ul id="selectedTags" class="sList"></ul>
     <script type="text/javascript" src="tagButtons.js"></script>
@@ -81,6 +64,14 @@
         // could also do this in a traditional way with for-loop and push only values
         // that haven't been seen before to the array
         testTags = flattenedArray.filter(onlyUnique)
+        //console.log(testTags);
+        var div = document.getElementById("tag")
+        //console.log(testTags.length);
+
+        for(i = 0; i < testTags.length; i++) {
+          div.innerHTML += '<a>'+testTags[i]+'</a>';
+        }
+
         return testTags
       }
 

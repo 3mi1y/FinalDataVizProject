@@ -2,18 +2,18 @@ body {
     width: 85%;
     background-color: #E0E0E0;
 }
-.tag {
+#tag {
     padding-top: 0.625em;
     text-align: left;
     display: table-cell;
     vertical-align: top;
     font-size: 100%;
 }
-.tag .tag0 {
+#tag #tag0 {
     color: #574ece;
     font-size: 1.25em;
 }
-.tag a {
+#tag a {
     display: inline-block;
     margin: .125em 0.75em .125em 0;
     line-height: 1.2em;
