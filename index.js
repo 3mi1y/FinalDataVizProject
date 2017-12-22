@@ -20,6 +20,15 @@ app.get('/Cities.csv', (req, res) => {
   res.sendFile(path.join(__dirname+'/Cities.csv'))
 })
 
+app.get('/style2.css', (req,res) => {
+  res.sendFile(path.join(__dirname+'/style2.css'))
+})
+
+
+
+
+
+
 app.listen(3000);
 
 console.log("Running at Port 3000");
