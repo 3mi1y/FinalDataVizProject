@@ -104,7 +104,7 @@
       // These projections are for drawing the actual map and state lines
       // *********************************************
       var zoom = d3.behavior.zoom()
-      .scaleExtent([1, 1000])
+      .scaleExtent([.5, 100])
       .on("zoom", zoomed);
 
       var path = d3.geo.path()
@@ -213,6 +213,7 @@
     function redrawCities(){
 
                 zoomSet = datSet.slice(0);
+
                 cluster();
 
 
@@ -271,21 +272,30 @@
 
     }
     function cluster() {
-
+      var flag = false
 
 
       for(i = 0; i < zoomSet.length; i++){
         for(j = i+1; j < zoomSet.length; j++){
-          if(Math.abs(zoomSet[i].lat - zoomSet[j].lat) < 1/zoom.scale() && Math.abs(zoomSet[i].lng - zoomSet[j].lng) < 1/zoom.scale() ){
+          for(k = 0; k<tagArray.length; k++){
+            if(zoomSet[i].tags.includes(tagArray[k]) && zoomSet[j].tags.includes(tagArray[k])){
 
-            zoomSet[i] = {contact_name: zoomSet[i].contact_name + ", " + zoomSet[j].contact_name, customer_name:zoomSet[i].customer_name + ", " + zoomSet[j].customer_name, lat:String((parseFloat(zoomSet[i].lat) + parseFloat(zoomSet[j].lat))/2), lng:String((parseFloat(zoomSet[i].lng) + parseFloat(zoomSet[j].lng))/2), tags:zoomSet[i].tags + ":" + zoomSet[j].tags}
-            zoomSet.splice(j,1);
-
-
+              if(Math.abs(zoomSet[i].lat - zoomSet[j].lat) < 1/zoom.scale() && Math.abs(zoomSet[i].lng - zoomSet[j].lng) < 1/zoom.scale()){
+                var flag = true
+                zoomSet[i] = {contact_name: zoomSet[i].contact_name + ", " + zoomSet[j].contact_name, customer_name:zoomSet[i].customer_name + ", " + zoomSet[j].customer_name, lat:String((parseFloat(zoomSet[i].lat) + parseFloat(zoomSet[j].lat))/2), lng:String((parseFloat(zoomSet[i].lng) + parseFloat(zoomSet[j].lng))/2), tags:zoomSet[i].tags + ":" + zoomSet[j].tags}
+                zoomSet.splice(j,1);
+            }
+          }
           }
         }
       }
-      console.log(zoomSet);
+
+      if(flag == true){
+        cluster()
+      }
+      else {
+        return
+      }
     }
 
       // we have to set a timeout on when we draw the circles because otherwise the cirlces will be drawn before the map
