@@ -22,7 +22,7 @@ function AddToList(tagName) {
 	updateView();
 	listItem.innerHTML = tagName;
 	listItem.id = "_" + tagName;
-	listItem.style.color = GetRandomColor();
+
 	//selectedList.appendChild(listItem);
 }
 
@@ -35,14 +35,7 @@ function RemoveFromList(tagName) {
 	//listItem.parentNode.removeChild(listItem);
 }
 
-function GetRandomColor() {
-	var r = (Math.floor(Math.random() * 256));
-	var g = (Math.floor(Math.random() * 256));
-	var b = (Math.floor(Math.random() * 256));
 
-	return 'rgb(' + r + ',' + g + ',' + b + ')';
-
-}
 
 function ConstructButtons(tagList) {
 

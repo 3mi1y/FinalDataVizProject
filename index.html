@@ -30,15 +30,15 @@
     </div>
 
     <div id="tagZone" class="tag"></div>
-    <ul id="selectedTags" class="sList"></ul>
+
     <script type="text/javascript" src="tagButtons.js"></script>
     <input type="button" value="Clear Selected" src="tagButtons.js" onclick="ClearSelected()"/>
-
 
     <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="//d3js.org/topojson.v1.min.js"></script>
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
+
     <script>
       // the testTags variable is a global variable that will be modified when a user
       // uploads a file
@@ -46,6 +46,13 @@
       var total = 10;
       var datSet = [];
       var zoomSet = [];
+
+
+      var countHash = {};
+      var tagsCounts = [];
+
+
+
       const CreateTagList = (data) => {
         // the nested array var takes all the tags from the data and splits by the
         // delimiter and returns a nested array
@@ -61,18 +68,6 @@
           }
         }
 
-        // this will count how many times a tag is repeated
-        var repeatCount = flattenedArray.reduce(function (count,curr) {
-          if(typeof count[curr] == 'undefined') {
-            count[curr] = 1;
-          }
-          else {
-            count[curr] += 1;
-          }
-          return count;
-        }, {});
-        console.log(repeatCount);
-
         // only get the unique values using the filter function (method defined below)
         // could also do this in a traditional way with for-loop and push only values
         // that haven't been seen before to the array
@@ -81,39 +76,31 @@
         var div = document.getElementById("tag")
         //console.log(testTags.length);
 
-        for(i = 0; i < testTags.length; i++) {
-          div.innerHTML += '<a id=tag0>'+testTags[i]+'</a>';
+        // this will count how many times a tag is repeated
+        for(i = 0 ; i < flattenedArray.length; i++){
+            if(!countHash.hasOwnProperty(flattenedArray[i])) {
+              countHash[flattenedArray[i]] = 1;
+            }else {
+              countHash[flattenedArray[i]] += 1;
+            }
         }
-        return testTags
+
+        for(key in countHash){
+          tagsCounts.push({"tags":key, "counts":countHash[key]})
+        }
       }
+
 
       const onlyUnique = (value, index, self) => {
         return self.indexOf(value) === index;
       }
 
-      var tagDiv = document.getElementById("tagZone");
-      var selectedList = document.getElementById("selectedTags");
-      var selected = [];
+      var tagDiv = document.getElementById("tagContainer");
 
-      var blank = d3.select("body")
-                    .append("svg")
-                    .attr("width", 100)
-                    .attr("height", 100);
-
-      var fillblank = d3.select("blank").append("testTags");
-
-      function GetRandomColor() {
-        var r = (Math.floor(Math.random() * 256));
-        var g = (Math.floor(Math.random() * 256));
-        var b = (Math.floor(Math.random() * 256));
-        return 'rgb(' + r + ',' + g + ',' + b + ')';
-      }
 
       // Viz parameters
       const width = 960
       const height = 600
-
-
       // *********************************************
       // These projections are for the data in the csv file that will eventually be uploadable
       // *********************************************
@@ -121,35 +108,24 @@
         .scale(1280)
         .translate([width / 2, height / 2])
         .precision(.5);
-
-
-
       var pathCSV = d3.geo.path()
           .projection(projectionCSV)
-
       // *********************************************
       // These projections are for drawing the actual map and state lines
       // *********************************************
       var zoom = d3.behavior.zoom()
       .scaleExtent([.5, 100])
       .on("zoom", zoomed);
-
       var path = d3.geo.path()
           .projection(null);
-
       var svg = d3.select("body").append("svg")
           .attr("width", width)
           .attr("height", height)
         .append("g");
-
       var g = svg.append("g");
-
      svg
       .call(zoom)
       .call(zoom.event);
-
-
-
       var radius = d3.scale.sqrt()
           .domain([0, 1e6])
           .range([0, 15]);
@@ -172,16 +148,14 @@
             .attr("class", "border border--state")
             .attr("d", path);
       });
-
       // this is the code that projects the lat/longs for individual companies
       // when you allow upload functionality this function will be working on the file that was uploaded
       const drawCompanies = () => {
-
+        arrangeCloud();
         //Select file on page
         document.getElementById('file').onchange = function(){
           var file = this.files[0];
           var data_file = file['name'];
-
 
         d3.csv(data_file, (err, companies) => {
             if(err) {
@@ -206,9 +180,7 @@
                 .append('circle')
                 .attr("id","path")
                 .attr('transform', (d) => {
-
                   return `translate(${projectionCSV([d.lng, d.lat])})`
-
                 })
                 .attr('r', (d) => {
                   return 0;
@@ -219,7 +191,7 @@
                     div.transition()
                         .duration(200)
                         .style("opacity", .9);
-                    div	.html(`<p>Customer Name: ${d.customer_name}</p>
+                tagCloud();        div	.html(`<p>Customer Name: ${d.customer_name}</p>
                               <p>Contact Name: ${d.contact_name}</p>`)
                         .attr("left", (d3.event.pageX) + "px")
                         .attr("top", (d3.event.pageY - 28) + "px");
@@ -230,69 +202,100 @@
                         .style("opacity", 0);
                 });
             }
+            tagCloud();
         })
       }
     }
-    function updateView() {
-        redrawCities();
+
+    const tagCloud = () => {
+
+
+      svg.selectAll('text')
+        .data(tagsCounts)
+        .enter()
+        .append('text')
+        .attr('x',100)
+        .attr('y',100)
+        .style("font-size",function(d) {return d.counts +"px"})
+        .text(function(d) {return d.tags})
+        .on('click', function(d) {console.log(d.tags); AddToList(d.tags)});
+
+
     }
+    function arrangeCloud(){
 
-    function redrawCities(){
-
-                zoomSet = datSet.slice(0);
-
-                cluster();
-
-
-                g.selectAll('circle').remove();
-
-                g.selectAll('circle')
-                .attr('class', 'companies')
-                .data(zoomSet)
-
-                .enter()
-                .append('circle')
-                .attr('transform', (d) => {
-                  return `translate(${projectionCSV([d.lng, d.lat])})`
-                })
-
-                .attr('r', (d) => {
-                    var  tags1 = d.tags.split(":");
-                    for(var tagSelected in tagArray){
-                      for(var tagPresent in tags1){
-                        if (tagArray[tagSelected] == tags1[tagPresent]) {
-
-                          return 10/zoom.scale();
-
-                        }
-                      }
+      var move = 1;
+      while(move > 0) {
+        move = 0;
+        svg.selectAll("text")
+           .each(function() {
+             var that = this,
+                 a = this.getBoundingClientRect();
+             svg.selectAll("text")
+                .each(function() {
+                  if(this != that) {
+                    var b = this.getBoundingClientRect();
+                    if(overlap) {
+                      this.attr('transform', 'translate(10)')
+                      // determine amount of movement, move labels
                     }
-                    return 0;
-                  })
-                  .style("stroke-width", 1/zoom.scale())
-                  .on("mouseover", function(d) {
-                      div.transition()
-                          .duration(200)
-                          .style("opacity", .9);
-                      div	.html(`<p>Customer Name: ${d.customer_name}</p>
-                                <p>Contact Name: ${d.contact_name}</p>`)
-                          .attr("left", (d3.event.pageX) + "px")
-                          .attr("top", (d3.event.pageY - 28) + "px");
-                      })
-                  .on("mouseout", function(d) {
-                      div.transition()
-                          .duration(500)
-                          .style("opacity", 0);
-                  });
-
-
-
-
+                  }
+                });
+           });
       }
 
+    }
+    function updateView() {
+
+                      zoomSet = datSet.slice(0);
+
+                      cluster();
+
+
+                      g.selectAll('circle').remove();
+
+                      g.selectAll('circle')
+                      .attr('class', 'companies')
+                      .data(zoomSet)
+
+                      .enter()
+                      .append('circle')
+                      .attr('transform', (d) => {
+                        return `translate(${projectionCSV([d.lng, d.lat])})`
+                      })
+
+                      .attr('r', (d) => {
+                          var  tags1 = d.tags.split(":");
+                          for(var tagSelected in tagArray){
+                            for(var tagPresent in tags1){
+                              if (tagArray[tagSelected] == tags1[tagPresent]) {
+
+                                return 10/zoom.scale();
+
+                              }
+                            }
+                          }
+                          return 0;
+                        })
+                        .style("stroke-width", 1/zoom.scale())
+                        .on("mouseover", function(d) {
+                            div.transition()
+                                .duration(200)
+                                .style("opacity", .9);
+                            div	.html(`<p>Customer Name: ${d.customer_name}</p>
+                                      <p>Contact Name: ${d.contact_name}</p>`)
+                                .attr("left", (d3.event.pageX) + "px")
+                                .attr("top", (d3.event.pageY - 28) + "px");
+                            })
+                        .on("mouseout", function(d) {
+                            div.transition()
+                                .duration(500)
+                                .style("opacity", 0);
+                        });
+    }
     function zoomed() {
 
-        redrawCities();
+        updateView();
 
         g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
 
@@ -300,23 +303,19 @@
     }
     function cluster() {
       var flag = false
-
-
       for(i = 0; i < zoomSet.length; i++){
         for(j = i+1; j < zoomSet.length; j++){
           for(k = 0; k<tagArray.length; k++){
             if(zoomSet[i].tags.includes(tagArray[k]) && zoomSet[j].tags.includes(tagArray[k])){
-
-              if(Math.abs(zoomSet[i].lat - zoomSet[j].lat) < 1/zoom.scale() && Math.abs(zoomSet[i].lng - zoomSet[j].lng) < 1/zoom.scale()){
-                var flag = true
-                zoomSet[i] = {contact_name: zoomSet[i].contact_name + ", " + zoomSet[j].contact_name, customer_name:zoomSet[i].customer_name + ", " + zoomSet[j].customer_name, lat:String((parseFloat(zoomSet[i].lat) + parseFloat(zoomSet[j].lat))/2), lng:String((parseFloat(zoomSet[i].lng) + parseFloat(zoomSet[j].lng))/2), tags:zoomSet[i].tags + ":" + zoomSet[j].tags}
-                zoomSet.splice(j,1);
+                if(Math.abs(zoomSet[i].lat - zoomSet[j].lat) < 1/zoom.scale() && Math.abs(zoomSet[i].lng - zoomSet[j].lng) < 1/zoom.scale()){
+                  var flag = true
+                  zoomSet[i] = {contact_name: zoomSet[i].contact_name + ", " + zoomSet[j].contact_name, customer_name:zoomSet[i].customer_name + ", " + zoomSet[j].customer_name, lat:String((parseFloat(zoomSet[i].lat) + parseFloat(zoomSet[j].lat))/2), lng:String((parseFloat(zoomSet[i].lng) + parseFloat(zoomSet[j].lng))/2), tags:zoomSet[i].tags + ":" + zoomSet[j].tags}
+                  zoomSet.splice(j,1);
+              }
             }
-          }
           }
         }
       }
-
       if(flag == true){
         cluster()
       }
@@ -331,6 +330,7 @@
         drawCompanies()
 
       }, 1000)
+
 
 
     </script>
