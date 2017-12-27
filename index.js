@@ -7,6 +7,7 @@ app.get('/', (req, res) => {
   //__dirname : It will resolve to your project folder.
 });
 
+/*
 app.get('/us.json', (req,res) => {
   res.sendFile(path.join(__dirname+'/us.json'))
 })
@@ -23,10 +24,13 @@ app.get('/Cities.csv', (req, res) => {
 app.get('/style2.css', (req,res) => {
   res.sendFile(path.join(__dirname+'/style2.css'))
 })
+*/
 
-
-
-
+//Hack to get all files in directory without hardcoding
+//TODO FileReader
+app.get('/*', (req,res) => {
+  res.sendFile(path.join(__dirname+req.path))
+});
 
 
 app.listen(3000);
