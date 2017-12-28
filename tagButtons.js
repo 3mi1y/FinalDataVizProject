@@ -1,18 +1,12 @@
-// var testTags = ["you", "have", "entered", "the", "tag", "zone", "things", "not", "even", "a", "real", "shark"];
-// var tagDiv = document.getElementById("tagZone");
-// var selectedList = document.getElementById("selectedTags");
-// var selected = [];
-	var tagArray = [];
-// ConstructButtons(testTags);
+
+var tagArray = [];
 
 function SetState(b) {
 	if(!selected.includes(b))  {
-
 		selected.push(b);
 		b.className = "down";
 		AddToList(b.innerHTML);
 	} else {
-
 		const index = selected.indexOf(b);
 		selected.splice(index, 1);
 		b.className = "up";
@@ -25,11 +19,11 @@ function SetState(b) {
 function AddToList(tagName) {
 	var listItem = document.createElement("li");
 	tagArray.push(tagName);
-
+	updateView();
 	listItem.innerHTML = tagName;
 	listItem.id = "_" + tagName;
 	listItem.style.color = GetRandomColor();
-	selectedList.appendChild(listItem);
+	//selectedList.appendChild(listItem);
 }
 
 function RemoveFromList(tagName) {
@@ -37,8 +31,8 @@ function RemoveFromList(tagName) {
 	var index = tagArray.indexOf(tagName);
 
 	tagArray.splice(index, 1);
-
-	listItem.parentNode.removeChild(listItem);
+	updateView();
+	//listItem.parentNode.removeChild(listItem);
 }
 
 function GetRandomColor() {
@@ -61,13 +55,17 @@ function ConstructButtons(tagList) {
 		btn.innerHTML = tagList[i];
 
 		btn.onclick = function() {
-
-			updateView();
 			SetState(this);
 		};
 
 		tagDiv.appendChild(btn);
 	}
+}
+
+function ClearSelected(){
+	tagArray = [];
+	updateView();
+
 }
 function getTagArray() {
 	return tagArray;

@@ -3,7 +3,7 @@
 <meta charset="utf-8">
   <style>
     .land {
-      fill: #ddd;
+      fill: #ccc;
     }
 
     .border {
@@ -19,25 +19,33 @@
       stroke: white;
     }
   </style>
-
+  <head>
+    <link rel="stylesheet" href="style2.css">
+  </head>
   <body>
-    <!--  -->
-    <div id="tagZone" class="tags"></div>
+    <div class='tagContainer'>
+      <div id = "tag">
+        <!-- tags will be inserted here -->
+      </div>
+    </div>
+
+    <div id="tagZone" class="tag"></div>
     <ul id="selectedTags" class="sList"></ul>
     <script type="text/javascript" src="tagButtons.js"></script>
-    <!--  -->
+    <input type="button" value="Clear Selected" src="tagButtons.js" onclick="ClearSelected()"/>
+
 
     <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="//d3js.org/topojson.v1.min.js"></script>
     <script src="https://d3js.org/d3.v4.min.js"></script>
     <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
     <script>
-
       // the testTags variable is a global variable that will be modified when a user
       // uploads a file
       let testTags = [];
       var total = 10;
-
+      var datSet = [];
+      var zoomSet = [];
       const CreateTagList = (data) => {
         // the nested array var takes all the tags from the data and splits by the
         // delimiter and returns a nested array
@@ -53,10 +61,29 @@
           }
         }
 
+        // this will count how many times a tag is repeated
+        var repeatCount = flattenedArray.reduce(function (count,curr) {
+          if(typeof count[curr] == 'undefined') {
+            count[curr] = 1;
+          }
+          else {
+            count[curr] += 1;
+          }
+          return count;
+        }, {});
+        console.log(repeatCount);
+
         // only get the unique values using the filter function (method defined below)
         // could also do this in a traditional way with for-loop and push only values
         // that haven't been seen before to the array
         testTags = flattenedArray.filter(onlyUnique)
+        //console.log(testTags);
+        var div = document.getElementById("tag")
+        //console.log(testTags.length);
+
+        for(i = 0; i < testTags.length; i++) {
+          div.innerHTML += '<a id=tag0>'+testTags[i]+'</a>';
+        }
         return testTags
       }
 
@@ -90,37 +117,44 @@
       // *********************************************
       // These projections are for the data in the csv file that will eventually be uploadable
       // *********************************************
-      const projectionCSV = d3.geo.albersUsa()
+      var projectionCSV = d3.geo.albersUsa()
         .scale(1280)
         .translate([width / 2, height / 2])
         .precision(.5);
 
-      const pathCSV = d3.geo.path()
+
+
+      var pathCSV = d3.geo.path()
           .projection(projectionCSV)
 
       // *********************************************
       // These projections are for drawing the actual map and state lines
       // *********************************************
+      var zoom = d3.behavior.zoom()
+      .scaleExtent([.5, 100])
+      .on("zoom", zoomed);
 
-      const path = d3.geo.path()
+      var path = d3.geo.path()
           .projection(null);
 
-      const svg = d3.select("body")
-          .append("svg")
+      var svg = d3.select("body").append("svg")
           .attr("width", width)
           .attr("height", height)
-          .call(d3.behavior.zoom().on("zoom", function () {
-            svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
-          }))
-          .append("g");
+        .append("g");
+
+      var g = svg.append("g");
+
+     svg
+      .call(zoom)
+      .call(zoom.event);
 
 
-      const radius = d3.scale.sqrt()
+
+      var radius = d3.scale.sqrt()
           .domain([0, 1e6])
           .range([0, 15]);
-
       // Define the div for the tooltip
-      const div = d3.select("body").append("div")
+      var div = d3.select("body").append("div")
           .attr("class", "tooltip")
           .style("opacity", 0);
 
@@ -128,12 +162,12 @@
       d3.json("/us.json", function(error, us) {
         if (error) return console.error(error);
 
-        svg.append("path")
+        g.append("path")
           .datum(topojson.feature(us, us.objects.states))
           .attr("class", "land")
           .attr("d", path);
 
-          svg.append("path")
+          g.append("path")
             .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
             .attr("class", "border border--state")
             .attr("d", path);
@@ -148,49 +182,39 @@
           var file = this.files[0];
           var data_file = file['name'];
 
-        d3.csv('/sampleData.csv', (err, companies) => {
+
+        d3.csv(data_file, (err, companies) => {
             if(err) {
               return console.log(err)
             } else {
+
+              //capture datSet for redraw
+              datSet = companies.slice();
+
               // Draw the buttons here so that the points on the map and the buttons are created all at once
               CreateTagList(companies)
-              ConstructButtons(testTags)
+              //ConstructButtons(testTags)
 
-              svg.append('path')
+              g.append('path')
                 .attr('class', 'companies')
                 .attr('d', pathCSV);
 
-              svg.selectAll('circle')
+              g.selectAll('circle')
                 .attr('class', 'companies')
                 .data(companies)
                 .enter()
                 .append('circle')
+                .attr("id","path")
                 .attr('transform', (d) => {
 
-                  //console.log(`translate(${projectionCSV([d.lng, d.lat])})`)
                   return `translate(${projectionCSV([d.lng, d.lat])})`
+
                 })
                 .attr('r', (d) => {
-                  // right now the radius of the bubble is represented by the number of tags associated with the company
-
-                  //broken code. doesn't do anything.
-                  tags = d.tags.split(":");
-                  var  temp = getTagArray();
-
-                  for(var tagPresent in tags){
-                    for(var tagSelected in tagArray){
-                      console.log("Test" + tagSelected + " : " + tagPresent)
-                      if (tagPresent = tagSelected) {
-                        return 10;
-                      }
-                    }
-
-                  }
-
                   return 0;
-                  //return d.tags.length/2
-
                 })
+
+                //tooltip functionality
                 .on("mouseover", function(d) {
                     div.transition()
                         .duration(200)
@@ -207,73 +231,105 @@
                 });
             }
         })
-
       }
     }
     function updateView() {
         redrawCities();
     }
 
-      function redrawCities(){
+    function redrawCities(){
 
-                svg.selectAll("circle").remove();
-                // Get the data again
-                d3.csv('/sampleData.csv', (err, companies) => {
-                  if(err) {
-                    return console.log(err)
-                  } else {
+                zoomSet = datSet.slice(0);
 
-                    circles = svg.selectAll(".circle");
-                    circles.remove();
-                    svg.selectAll('.circle')
-                      .attr('class', 'companies')
-                      .data(companies)
-                      .enter()
-                      .append('circle')
-                      .attr('transform', (d) => {
+                cluster();
 
-                        //console.log(`translate(${projectionCSV([d.lng, d.lat])})`)
-                        return `translate(${projectionCSV([d.lng, d.lat])})`
-                      })
 
-                      .attr('r', (d) => {
-                        // right now the radius of the bubble is represented by the number of tags associated with the company
+                g.selectAll('circle').remove();
 
-                        var  tags1 = d.tags.split(":");
-                        for(var tagSelected in tagArray){
-                          for(var tagPresent in tags1){
-                            if (tagArray[tagSelected] == tags1[tagPresent]) {
-                              return 10;
-                            }
-                          }
+                g.selectAll('circle')
+                .attr('class', 'companies')
+                .data(zoomSet)
+
+                .enter()
+                .append('circle')
+                .attr('transform', (d) => {
+                  return `translate(${projectionCSV([d.lng, d.lat])})`
+                })
+
+                .attr('r', (d) => {
+                    var  tags1 = d.tags.split(":");
+                    for(var tagSelected in tagArray){
+                      for(var tagPresent in tags1){
+                        if (tagArray[tagSelected] == tags1[tagPresent]) {
+
+                          return 10/zoom.scale();
+
                         }
-                        return 0;
-
+                      }
+                    }
+                    return 0;
+                  })
+                  .style("stroke-width", 1/zoom.scale())
+                  .on("mouseover", function(d) {
+                      div.transition()
+                          .duration(200)
+                          .style("opacity", .9);
+                      div	.html(`<p>Customer Name: ${d.customer_name}</p>
+                                <p>Contact Name: ${d.contact_name}</p>`)
+                          .attr("left", (d3.event.pageX) + "px")
+                          .attr("top", (d3.event.pageY - 28) + "px");
                       })
-                      .on("mouseover", function(d) {
-                          div.transition()
-                              .duration(200)
-                              .style("opacity", .9);
-                          div	.html(`<p>Customer Name: ${d.customer_name}</p>
-                                    <p>Contact Name: ${d.contact_name}</p>`)
-                              .attr("left", (d3.event.pageX) + "px")
-                              .attr("top", (d3.event.pageY - 28) + "px");
-                          })
-                      .on("mouseout", function(d) {
-                          div.transition()
-                              .duration(500)
-                              .style("opacity", 0);
-                      });
-                  }
-              })
+                  .on("mouseout", function(d) {
+                      div.transition()
+                          .duration(500)
+                          .style("opacity", 0);
+                  });
+
+
+
 
       }
 
+    function zoomed() {
+
+        redrawCities();
+
+        g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+
+
+    }
+    function cluster() {
+      var flag = false
+
+
+      for(i = 0; i < zoomSet.length; i++){
+        for(j = i+1; j < zoomSet.length; j++){
+          for(k = 0; k<tagArray.length; k++){
+            if(zoomSet[i].tags.includes(tagArray[k]) && zoomSet[j].tags.includes(tagArray[k])){
+
+              if(Math.abs(zoomSet[i].lat - zoomSet[j].lat) < 1/zoom.scale() && Math.abs(zoomSet[i].lng - zoomSet[j].lng) < 1/zoom.scale()){
+                var flag = true
+                zoomSet[i] = {contact_name: zoomSet[i].contact_name + ", " + zoomSet[j].contact_name, customer_name:zoomSet[i].customer_name + ", " + zoomSet[j].customer_name, lat:String((parseFloat(zoomSet[i].lat) + parseFloat(zoomSet[j].lat))/2), lng:String((parseFloat(zoomSet[i].lng) + parseFloat(zoomSet[j].lng))/2), tags:zoomSet[i].tags + ":" + zoomSet[j].tags}
+                zoomSet.splice(j,1);
+            }
+          }
+          }
+        }
+      }
+
+      if(flag == true){
+        cluster()
+      }
+      else {
+        return
+      }
+    }
 
       // we have to set a timeout on when we draw the circles because otherwise the cirlces will be drawn before the map
       // and then the map will cover the circles. So, we need to make sure that the circles aren't drawn until after the map.
       const timeout1 = setTimeout(() => {
         drawCompanies()
+
       }, 1000)
 
 
