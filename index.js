@@ -16,8 +16,8 @@ app.get('/tagButtons.js', (req,res) => {
   res.sendFile(path.join(__dirname+'/tagButtons.js'))
 })
 
-app.get('/Cities.csv', (req, res) => {
-  res.sendFile(path.join(__dirname+'/Cities.csv'))
+app.get('/SampleData.csv', (req, res) => {
+  res.sendFile(path.join(__dirname+'/SampleData.csv'))
 })
 
 app.get('/style2.css', (req,res) => {
