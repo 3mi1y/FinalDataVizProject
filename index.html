@@ -32,7 +32,7 @@
     <div id="tagZone" class="tag"></div>
 
     <script type="text/javascript" src="tagButtons.js"></script>
-    <input type="button" value="Clear Selected" src="tagButtons.js" onclick="ClearSelected()"/>
+
 
     <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="//d3js.org/topojson.v1.min.js"></script>
@@ -50,7 +50,7 @@
 
       var countHash = {};
       var tagsCounts = [];
-
+      var selectedTags = []
 
 
       const CreateTagList = (data) => {
@@ -204,14 +204,14 @@
                 });
             }
             tagCloud();
-            arrangeCloud();
+
         })
       }
     }
 
     const tagCloud = () => {
 
-
+      svg.selectAll('text').remove();
       svg.selectAll('text')
         .data(tagsCounts)
         .enter()
@@ -220,10 +220,19 @@
         .attr('y',50)
         .style("font-size",function(d) {return  d.counts +"px"})
         .text(function(d) {return d.tags})
-        .on('click', function(d) {arrangeCloud(); AddToList(d.tags)});
+        .on('click', function(d) { console.log(d); selectedTags.push(d); console.log(tagsCounts.indexOf(d),1);tagsCounts.splice(tagsCounts.indexOf(d),1);  console.log(tagsCounts); console.log(selectedTags); tagCloud()});
+      svg.selectAll('text')
+        .data(selectedTags)
+        .enter()
+        .append('text')
+        .attr('x',400)
+        .attr('y',400)
+        .text(function(d) {return d.tags})
+        .on('click', function(d) {tagsCounts.push(d);  selectedTags.splice(selectedTags.indexOf(d),1);console.log(tagsCounts); console.log(selectedTags);  tagCloud()});
 
-
+        arrangeCloud();
     }
+
     function arrangeCloud(){
 
       var move = 1;
@@ -275,9 +284,9 @@
 
                       .attr('r', (d) => {
                           var  tags1 = d.tags.split(":");
-                          for(var tagSelected in tagArray){
+                          for(var tagSelected in selectedTags){
                             for(var tagPresent in tags1){
-                              if (tagArray[tagSelected] == tags1[tagPresent]) {
+                              if (selectedTags[tagSelected] == tags1[tagPresent]) {
 
                                 return 10/zoom.scale();
 
@@ -314,11 +323,11 @@
       var flag = false
       for(i = 0; i < zoomSet.length; i++){
         for(j = i+1; j < zoomSet.length; j++){
-          for(k = 0; k<tagArray.length; k++){
-            if(zoomSet[i].tags.includes(tagArray[k]) && zoomSet[j].tags.includes(tagArray[k])){
-                if(Math.abs(zoomSet[i].lat - zoomSet[j].lat) < 1/zoom.scale() && Math.abs(zoomSet[i].lng - zoomSet[j].lng) < 1/zoom.scale()){
+          for(k = 0; k<selectedTags.length; k++){
+            if(datSet[i].tags.includes(selectedTags[k]) && datSet[j].tags.includes(selectedTags[k])){
+                if(Math.abs(datSet[i].lat - datSet[j].lat) < 1/zoom.scale() && Math.abs(datSet[i].lng - datSet[j].lng) < 1/zoom.scale()){
                   var flag = true
-                  zoomSet[i] = {contact_name: zoomSet[i].contact_name + ", " + zoomSet[j].contact_name, customer_name:zoomSet[i].customer_name + ", " + zoomSet[j].customer_name, lat:String((parseFloat(zoomSet[i].lat) + parseFloat(zoomSet[j].lat))/2), lng:String((parseFloat(zoomSet[i].lng) + parseFloat(zoomSet[j].lng))/2), tags:zoomSet[i].tags + ":" + zoomSet[j].tags}
+                  datSet[i] = {contact_name: datSet[i].contact_name + ", " + datSet[j].contact_name, customer_name:datSet[i].customer_name + ", " + datSet[j].customer_name, lat:String((parseFloat(datSet[i].lat) + parseFloat(datSet[j].lat))/2), lng:String((parseFloat(datSet[i].lng) + parseFloat(datSet[j].lng))/2), tags:datSet[i].tags + ":" + datSet[j].tags}
                   zoomSet.splice(j,1);
               }
             }

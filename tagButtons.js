@@ -18,7 +18,7 @@ function SetState(b) {
 
 function AddToList(tagName) {
 	var listItem = document.createElement("li");
-	tagArray.push(tagName);
+	selectedTags.push(tagName);
 	updateView();
 	listItem.innerHTML = tagName;
 	listItem.id = "_" + tagName;
@@ -28,9 +28,9 @@ function AddToList(tagName) {
 
 function RemoveFromList(tagName) {
 	var listItem = document.getElementById("_" + tagName);
-	var index = tagArray.indexOf(tagName);
+	var index = selectedTags.indexOf(tagName);
 
-	tagArray.splice(index, 1);
+	selectedTags.splice(index, 1);
 	updateView();
 	//listItem.parentNode.removeChild(listItem);
 }
@@ -55,11 +55,6 @@ function ConstructButtons(tagList) {
 	}
 }
 
-function ClearSelected(){
-	tagArray = [];
-	updateView();
-
-}
 function getTagArray() {
 	return tagArray;
 }
