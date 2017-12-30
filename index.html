@@ -23,17 +23,17 @@
     <link rel="stylesheet" href="style2.css">
   </head>
   <body>
-    <div class='tagContainer'>
-      <div id = "tag">
-        <!-- tags will be inserted here -->
-      </div>
+
+    <div id = "cloudFrame">
+
     </div>
 
-    <div id="tagZone" class="tag"></div>
+    <div id = "tagFrame" style="float: left;">
 
+    </div>
+
+  <div id = "map" style="float: left;">
     <script type="text/javascript" src="tagButtons.js"></script>
-
-
     <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="//d3js.org/topojson.v1.min.js"></script>
     <script src="https://d3js.org/d3.v4.min.js"></script>
@@ -42,16 +42,14 @@
     <script>
       // the testTags variable is a global variable that will be modified when a user
       // uploads a file
-      let testTags = [];
-      var total = 10;
+
       var datSet = [];
       var zoomSet = [];
-
-
       var countHash = {};
       var tagsCounts = [];
       var selectedTags = []
-
+      var unselectedTags = [];
+      var tempAr = [];
 
       const CreateTagList = (data) => {
         // the nested array var takes all the tags from the data and splits by the
@@ -68,14 +66,6 @@
           }
         }
 
-        // only get the unique values using the filter function (method defined below)
-        // could also do this in a traditional way with for-loop and push only values
-        // that haven't been seen before to the array
-        testTags = flattenedArray.filter(onlyUnique)
-        //console.log(testTags);
-        var div = document.getElementById("tag")
-        //console.log(testTags.length);
-
         // this will count how many times a tag is repeated
         for(i = 0 ; i < flattenedArray.length; i++){
             if(!countHash.hasOwnProperty(flattenedArray[i])) {
@@ -88,6 +78,7 @@
         for(key in countHash){
           tagsCounts.push({"tags":key, "counts":countHash[key]})
         }
+        unselectedTags = tagsCounts.slice();
       }
 
 
@@ -95,12 +86,10 @@
         return self.indexOf(value) === index;
       }
 
-      var tagDiv = document.getElementById("tagContainer");
-
-
       // Viz parameters
       const width = 960
       const height = 600
+      var selectedY = height/4
       // *********************************************
       // These projections are for the data in the csv file that will eventually be uploadable
       // *********************************************
@@ -114,24 +103,39 @@
       // These projections are for drawing the actual map and state lines
       // *********************************************
       var zoom = d3.behavior.zoom()
-      .scaleExtent([.5, 100])
+      .scaleExtent([1, 20])
       .on("zoom", zoomed);
+
       var path = d3.geo.path()
           .projection(null);
-      var svg = d3.select("body").append("svg")
+
+      var svg = d3.select("#map").append("svg")
           .attr("width", width)
           .attr("height", height)
+
         .append("g");
+
+      var cloudFrame = d3.select("#cloudFrame").append("svg")
+          .attr("width", width)
+          .attr("height", 150);
+
+
+      var selectedFrame = d3.select("#tagFrame").append("svg")
+          .attr("width", 150)
+          .attr("height", height)
+
+
       var g = svg.append("g");
-     svg
-      .call(zoom)
-      .call(zoom.event);
+
+      svg
+        .call(zoom)
+        .call(zoom.event);
 
       var radius = d3.scale.sqrt()
           .domain([0, 1e6])
           .range([0, 15]);
       // Define the div for the tooltip
-      var div = d3.select("body").append("div")
+      var div = d3.select("#map").append("div")
           .attr("class", "tooltip")
           .style("opacity", 0);
 
@@ -148,108 +152,153 @@
             .datum(topojson.mesh(us, us.objects.states, function(a, b) { return a !== b; }))
             .attr("class", "border border--state")
             .attr("d", path);
+
       });
       // this is the code that projects the lat/longs for individual companies
       // when you allow upload functionality this function will be working on the file that was uploaded
-      const drawCompanies = () => {
+    const drawCompanies = () => {
         arrangeCloud();
+
         //Select file on page
-        document.getElementById('file').onchange = function(){
-          var file = this.files[0];
-          var data_file = file['name'];
+          document.getElementById('file').onchange = function(){
+            var file = this.files[0];
+            var data_file = file['name'];
 
-        d3.csv(data_file, (err, companies) => {
-            if(err) {
-              return console.log(err)
-            } else {
+          d3.csv(data_file, (err, companies) => {
+              if(err) {
+                return console.log(err)
+              } else {
 
-              //capture datSet for redraw
-              datSet = companies.slice();
+                //capture datSet for redraw
+                datSet = companies.slice();
+                zoomSet = datSet.slice();
+                // Draw the buttons here so that the points on the map and the buttons are created all at once
+                CreateTagList(companies)
+                //ConstructButtons(testTags)
 
-              // Draw the buttons here so that the points on the map and the buttons are created all at once
-              CreateTagList(companies)
-              //ConstructButtons(testTags)
+                svg.append('path')
+                  .attr('class', 'companies')
+                  .attr('d', pathCSV);
 
-              g.append('path')
-                .attr('class', 'companies')
-                .attr('d', pathCSV);
+                svg.selectAll('circle')
+                  .attr('class', 'companies')
+                  .data(companies)
+                  .enter()
+                  .append('circle')
 
-              g.selectAll('circle')
-                .attr('class', 'companies')
-                .data(companies)
-                .enter()
-                .append('circle')
-                .attr("id","path")
-                .attr('transform', (d) => {
-                  return `translate(${projectionCSV([d.lng, d.lat])})`
-                })
-                .attr('r', (d) => {
-                  return 0;
-                })
+                  .attr('transform', (d) => {
+                    return `translate(${projectionCSV([d.lng, d.lat])})`
+                  })
+                  .attr('r', (d) => {
+                    return 0;
+                  })
 
-                //tooltip functionality
-                .on("mouseover", function(d) {
-                    div.transition()
-                        .duration(200)
-                        .style("opacity", .9);
-                tagCloud();        div	.html(`<p>Customer Name: ${d.customer_name}</p>
-                              <p>Contact Name: ${d.contact_name}</p>`)
-                        .attr("left", (d3.event.pageX) + "px")
-                        .attr("top", (d3.event.pageY - 28) + "px");
-                    })
-                .on("mouseout", function(d) {
-                    div.transition()
-                        .duration(500)
-                        .style("opacity", 0);
-                });
-            }
-            tagCloud();
+                  //tooltip functionality
+                  .on("mouseover", function(d) {
+                      div.transition()
+                          .duration(200)
+                          .style("opacity", .9);
+                  tagCloud();        div	.html(`<p>Customer Name: ${d.customer_name}</p>
+                                <p>Contact Name: ${d.contact_name}</p>`)
+                          .attr("left", (d3.event.pageX) + "px")
+                          .attr("top", (d3.event.pageY - 28) + "px");
+                      })
+                  .on("mouseout", function(d) {
+                      div.transition()
+                          .duration(500)
+                          .style("opacity", 0);
+                  });
+              }
+              unselectedCloud();
 
-        })
+          })
+        }
       }
-    }
 
-    const tagCloud = () => {
 
-      svg.selectAll('text').remove();
-      svg.selectAll('text')
-        .data(tagsCounts)
+    const unselectedCloud = () => {
+      updateView();
+      cloudFrame.selectAll('text')
+        .data(unselectedTags)
         .enter()
         .append('text')
+        .attr("id",function(d) {return d.tags})
         .attr('x',400)
         .attr('y',50)
         .style("font-size",function(d) {return  d.counts +"px"})
         .text(function(d) {return d.tags})
-        .on('click', function(d) { console.log(d); selectedTags.push(d); console.log(tagsCounts.indexOf(d),1);tagsCounts.splice(tagsCounts.indexOf(d),1);  console.log(tagsCounts); console.log(selectedTags); tagCloud()});
-      svg.selectAll('text')
+        .on('click', function(d) {
+
+           unselectedTags.splice(unselectedTags.indexOf(d3.event.target.id),1);
+           for(tag in tagsCounts){
+             if(d3.event.target.id == tagsCounts[tag].tags){
+               selectedTags.push(tagsCounts[tag]);
+             }
+           }
+           this.remove();
+
+           selectedCloud()});
+
+           arrangeCloud();
+
+      }
+
+
+    const selectedCloud = () => {
+      updateView();
+
+      selectedFrame.selectAll('text')
         .data(selectedTags)
         .enter()
         .append('text')
-        .attr('x',400)
-        .attr('y',400)
-        .text(function(d) {return d.tags})
-        .on('click', function(d) {tagsCounts.push(d);  selectedTags.splice(selectedTags.indexOf(d),1);console.log(tagsCounts); console.log(selectedTags);  tagCloud()});
+        .attr("id",function(d) {
 
-        arrangeCloud();
+          return d.tags})
+
+        .attr('x',10)
+        .attr('y',function(d){
+          for(tag in tagsCounts){
+            if(d3.event.target.id == tagsCounts[tag].tags){
+              tempAr.push(tag);
+              tempAr.sort();
+
+              return (100 + 20*(tag));
+            }
+          }
+        })
+       .text(function(d) {return d.tags})
+       .on('click', function(d) {
+          selectedTags.splice(selectedTags.indexOf(d3.event.target.id),1);
+          for(tag in tagsCounts){
+            if(d3.event.target.id == tagsCounts[tag].tags){
+              unselectedTags.push(tagsCounts[tag]);
+
+            }
+          }
+          this.remove();
+          unselectedCloud();
+          arrangeCloud();
+        })
     }
+
 
     function arrangeCloud(){
 
       var move = 1;
       while(move != 0) {
         move = 0;
-        svg.selectAll('text')
+        cloudFrame.selectAll('text')
            .each(function() {
              var that = this
                  a = this.getBoundingClientRect();
-             svg.selectAll('text')
+             cloudFrame.selectAll('text')
                 .each(function() {
                   if(this != that) {
                     var b = this.getBoundingClientRect();
-                    var overlap = !(a.right < b.left ||
-                a.left > b.right ||
-                a.bottom < b.top ||
-                a.top > b.bottom)
+                    var overlap = !(a.right <= b.left ||
+                a.left >= b.right ||
+                a.bottom <= b.top ||
+                a.top >= b.bottom)
                     if(overlap){
                       d3.select(this).attr("transform", function(d) {
                       move = b.right- a.right;
@@ -262,73 +311,71 @@
       }
 
     }
+
+
     function updateView() {
+      zoomSet = datSet.slice();
+      cluster(zoomSet);
+      g.selectAll('circle').remove();
+      g.selectAll('circle')
+      .attr('class', 'companies')
+      .data(zoomSet)
+      .enter()
+      .append('circle')
+      .attr('transform', (d) => {
+        return `translate(${projectionCSV([d.lng, d.lat])})`
+      })
 
-                      zoomSet = datSet.slice(0);
+      .attr('r', (d) => {
+          var  tags1 = d.tags.split(":");
+          for(i = 0; i < tags1.length; i ++){
 
-                      cluster();
-
-                      arrangeCloud();
-
-                      g.selectAll('circle').remove();
-
-                      g.selectAll('circle')
-                      .attr('class', 'companies')
-                      .data(zoomSet)
-
-                      .enter()
-                      .append('circle')
-                      .attr('transform', (d) => {
-                        return `translate(${projectionCSV([d.lng, d.lat])})`
-                      })
-
-                      .attr('r', (d) => {
-                          var  tags1 = d.tags.split(":");
-                          for(var tagSelected in selectedTags){
-                            for(var tagPresent in tags1){
-                              if (selectedTags[tagSelected] == tags1[tagPresent]) {
-
-                                return 10/zoom.scale();
-
-                              }
-                            }
-                          }
-                          return 0;
-                        })
-                        .style("stroke-width", 1/zoom.scale())
-                        .on("mouseover", function(d) {
-                            div.transition()
-                                .duration(200)
-                                .style("opacity", .9);
-                            div	.html(`<p>Customer Name: ${d.customer_name}</p>
-                                      <p>Contact Name: ${d.contact_name}</p>`)
-                                .attr("left", (d3.event.pageX) + "px")
-                                .attr("top", (d3.event.pageY - 28) + "px");
-                            })
-                        .on("mouseout", function(d) {
-                            div.transition()
-                                .duration(500)
-                                .style("opacity", 0);
-                        });
+            for(j = 0; j < selectedTags.length; j++)
+              if(tags1[i] == selectedTags[j].tags){
+                return 10/zoom.scale();
+              }
+          }
+          return 0;
+        })
+        .style("stroke-width", 1/zoom.scale())
+        .on("mouseover", function(d) {
+            div.transition()
+                .duration(200)
+                .style("opacity", .9);
+            div	.html(`<p>Customer Name: ${d.customer_name}</p>
+                      <p>Contact Name: ${d.contact_name}</p>`)
+                .attr("left", (d3.event.pageX) + "px")
+                .attr("top", (d3.event.pageY - 28) + "px");
+            })
+        .on("mouseout", function(d) {
+            div.transition()
+                .duration(500)
+                .style("opacity", 0);
+        });
     }
+
+
     function zoomed() {
-
         updateView();
-
         g.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-        //svg.selectAll('text').attr("transform", "translate(" + d3.event.translate + ")");
 
     }
+
+
     function cluster() {
       var flag = false
+
       for(i = 0; i < zoomSet.length; i++){
-        for(j = i+1; j < zoomSet.length; j++){
-          for(k = 0; k<selectedTags.length; k++){
-            if(datSet[i].tags.includes(selectedTags[k]) && datSet[j].tags.includes(selectedTags[k])){
-                if(Math.abs(datSet[i].lat - datSet[j].lat) < 1/zoom.scale() && Math.abs(datSet[i].lng - datSet[j].lng) < 1/zoom.scale()){
+        for(j = i+1; j < zoomSet.length-1; j++){
+          for(k = 0; k < selectedTags.length; k++){
+            if(zoomSet[i].tags.includes(selectedTags[k].tags) && zoomSet[j].tags.includes(selectedTags[k].tags)){
+                if(Math.abs(zoomSet[i].lat - zoomSet[j].lat) < 1/zoom.scale() && Math.abs(zoomSet[i].lng - zoomSet[j].lng) < 1/zoom.scale()){
+
                   var flag = true
-                  datSet[i] = {contact_name: datSet[i].contact_name + ", " + datSet[j].contact_name, customer_name:datSet[i].customer_name + ", " + datSet[j].customer_name, lat:String((parseFloat(datSet[i].lat) + parseFloat(datSet[j].lat))/2), lng:String((parseFloat(datSet[i].lng) + parseFloat(datSet[j].lng))/2), tags:datSet[i].tags + ":" + datSet[j].tags}
+
+                  zoomSet[i] = {contact_name: zoomSet[i].contact_name + ", " + zoomSet[j].contact_name, customer_name:zoomSet[i].customer_name + ", " + zoomSet[j].customer_name, lat:String((parseFloat(zoomSet[i].lat) + parseFloat(zoomSet[j].lat))/2), lng:String((parseFloat(zoomSet[i].lng) + parseFloat(zoomSet[j].lng))/2), tags:zoomSet[i].tags + ":" + zoomSet[j].tags}
                   zoomSet.splice(j,1);
+
               }
             }
           }
@@ -338,18 +385,15 @@
         cluster()
       }
       else {
-        return
+        return zoomSet;
       }
     }
 
-      // we have to set a timeout on when we draw the circles because otherwise the cirlces will be drawn before the map
-      // and then the map will cover the circles. So, we need to make sure that the circles aren't drawn until after the map.
       const timeout1 = setTimeout(() => {
         drawCompanies()
 
       }, 1000)
 
-
-
     </script>
+    </div>
   </body>
