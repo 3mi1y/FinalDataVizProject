@@ -2,6 +2,10 @@
 <input type="file" name="file" id="file">
 <meta charset="utf-8">
   <style>
+    .test_back {
+      background-color: red;
+    }
+
     .land {
       fill: #ccc;
     }
@@ -24,15 +28,12 @@
   </head>
   <body>
 
-    <div id = "cloudFrame">
+    <div id = "cloudFrame">  </div>
 
-    </div>
+  <div id = "tagFrame" style='float: left;'> </div>
 
-    <div id = "tagFrame" style="float: left;">
+  <div id = "map" >
 
-    </div>
-
-  <div id = "map" style="float: middle;">
     <script type="text/javascript" src="tagButtons.js"></script>
     <script src="//d3js.org/d3.v3.min.js" charset="utf-8"></script>
     <script src="//d3js.org/topojson.v1.min.js"></script>
@@ -89,7 +90,7 @@
       // Viz parameters
       const width = 960
       const height = 600
-      var selectedY = height/4
+
       // *********************************************
       // These projections are for the data in the csv file that will eventually be uploadable
       // *********************************************
@@ -120,7 +121,7 @@
           .attr("height", 150);
 
 
-      var selectedFrame = d3.select("#tagFrame").append("svg")
+      var tagFrame = d3.select("#tagFrame").append("svg")
           .attr("width", 150)
           .attr("height", height)
 
@@ -247,7 +248,7 @@
     const selectedCloud = () => {
       updateView();
 
-      selectedFrame.selectAll('text')
+      tagFrame.selectAll('text')
         .data(selectedTags)
         .enter()
         .append('text')
@@ -335,11 +336,8 @@
 
             for(j = 0; j < selectedTags.length; j++)
               if(tags1[i] == selectedTags[j].tags){
-                //console.log(d.customer_name.split(",").length);
-                if (d.customer_name.split(",").length >5 ){
-                  return 50/zoom.scale();
-                } else{}
-                return (10* (d.customer_name.split(",").length))/zoom.scale();
+                console.log(tags1)
+                return (10 * Math.sqrt(d.customer_name.split(",").length))/zoom.scale();
               }
           }
 
@@ -404,4 +402,7 @@
 
     </script>
     </div>
+
+
+
   </body>
